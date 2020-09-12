@@ -6,6 +6,10 @@ import time
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 import json
+
+from HandleJs import Py4Js
+from main import translate
+
 import fire
 
 # 浏览器驱动位置
@@ -17,7 +21,13 @@ chrome_opt.add_argument('--disable-gpu')
 chrome_opt.add_argument('--no-sandbox')
 driver = webdriver.Chrome(chrome_options=chrome_opt, executable_path='/usr/chrome/chromedriver')
 
-app_ip = ['bazinga.historyclean']
+# app包名列表
+app_id = [
+    'bazinga.historyclean',
+    'com.nlcleaner',
+    'www.doorway.com.clean',
+    'cn.rball.fastcleanmaster'
+]
 
 show_more_class_tag = "CwaK9"  # 显示更多
 all_reviews_tag = "UD7Dzf"  # 评论
@@ -54,10 +64,11 @@ def is_crash_exist(review):
 
 def main():
     print("main...")
+    js = Py4Js()  # JS执行器
     app_num = 0
-    while app_num < len(app_ip):
+    while app_num < len(app_id):
         # hl用于定于国家
-        url = "https://play.google.com/store/apps/details?id=" + app_ip[app_num] + "&showAllReviews=true&hl=cn"
+        url = "https://play.google.com/store/apps/details?id=" + app_id[app_num] + "&showAllReviews=true&hl=cn"
         print(url)
         page_num = 0
         driver.get(url)
@@ -68,10 +79,10 @@ def main():
         while show_more_exist:
             show_more_exist = search_show_more()
             if show_more_exist:
-                print("app name %s page %d:" % (app_ip[app_num], page_num))
+                print("app name %s page %d:" % (app_id[app_num], page_num))
                 page_num += 1
                 driver.execute_script(click_show_more)
-            if page_num >= 2:
+            if page_num >= 3:
                 break
 
         """ 点击更多按钮
@@ -97,26 +108,33 @@ def main():
             # stars.append(user.find_elements_by_class_name(star_tag)[0])
         pass
 
-        final_json = []  # 结果列表
-        print("start to build json for " + app_ip[app_num])
+        print("start to build json for " + app_id[app_num])
         for review, date, name in zip(reviews, dates, user_name):
             count += 1
+            # msg_cn = translate(review.text, js, 'zh')
+            # ls = [name, review.text, msg_cn, date]
             ls = [name, review.text, date]
             ls = [i.replace('\t', ' ') for i in ls]  # 删除特殊符号
-            result = {"User": name, "Content": review.text, "Numbers": str(count), "Date": date}
             print('\t'.join(ls))
-            final_json.append(result)
         pass
+        """
         if len(final_json) > 0:
             output = json.dumps(final_json)
             fp = open("json_file/" + app_ip[app_num] + ".json", "w")
             fp.write(output)
             fp.close()
-
+        # """
         app_num += 1
         pass
 
     driver.quit()  # 退出
+    pass
+
+
+def abc():
+    js = Py4Js()  # JS执行器
+    msg_cn = translate('A very good app. Easy to use, reliable and hasn\'t given any problems.', js, 'zh')
+    print(msg_cn)
     pass
 
 
